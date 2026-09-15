@@ -1,10 +1,10 @@
 import os
 import json
 
-
+# noinspection SpellCheckingInspection
 class GestorConfiguracion:
     def __init__(self):
-        # Nombres por defecto si el "usuario" decide iniciar uno nuevo
+        # Nombres por defecto si el usuario decide iniciar uno nuevo
         self.nombre_archivo = "config.json"
         self.archivo_respaldo = "config.bak"
         self.archivo_temporal = "config.tmp"
@@ -28,50 +28,51 @@ class GestorConfiguracion:
             self.archivo_respaldo = f"{base}.bak"
             self.archivo_temporal = f"{base}.tmp"
 
-            try:
-                with open(self.nombre_archivo, "r", encoding="utf-8") as archivo:
-                    self.configuracion_actual = json.load(archivo)
+        try:
+            with open(self.nombre_archivo, "r", encoding="utf-8") as archivo:
+                self.configuracion_actual = json.load(archivo)
 
-                    # Rellena claves faltantes con valores por defecto
-                    for key in self.configuracion_defecto:
-                        if key not in self.configuracion_actual:
-                            self.configuracion_actual[key] = self.configuracion_defecto[key]
+                # Rellena claves faltantes con valores por defecto
+                for key in self.configuracion_defecto:
+                    if key not in self.configuracion_actual:
+                        self.configuracion_actual[key] = self.configuracion_defecto[key]
 
-                    return self.configuracion_actual, "exito"
+                return self.configuracion_actual, "exito"
 
-            except FileNotFoundError:
-                self.configuracion_actual = self.configuracion_defecto.copy()
-                return self.configuracion_actual, "no_encontrado"
+        except FileNotFoundError:
+            self.configuracion_actual = self.configuracion_defecto.copy()
+            return self.configuracion_actual, "no_encontrado"
 
-            except json.JSONDecodeError:
-                self.configuracion_actual = self.configuracion_defecto.copy()
-                return self.configuracion_actual, "invalido"
+        except json.JSONDecodeError:
+            self.configuracion_actual = self.configuracion_defecto.copy()
+            return self.configuracion_actual, "invalido"
 
-            except PermissionError:
-                self.configuracion_actual = self.configuracion_defecto.copy()
-                return self.configuracion_actual, "sin_permisos"
+        except PermissionError:
+            self.configuracion_actual = self.configuracion_defecto.copy()
+            return self.configuracion_actual, "sin_permisos"
 
-        def guardar_configuracion(self, datos_configuracion):
-            """Patrón de escritura segura usando archivo temporal."""
-            try:
-                if os.path.exists(self.nombre_archivo):
-                    with open(self.nombre_archivo, "r", encoding="utf-8") as original:
-                        contenido_anterior = original.read()
+    # noinspection PyBroadException
+    def guardar_configuracion(self, datos_configuracion):
+        """Patrón de escritura segura usando archivo temporal."""
+        try:
+            if os.path.exists(self.nombre_archivo):
+                with open(self.nombre_archivo, "r", encoding="utf-8") as original:
+                    contenido_anterior = original.read()
 
-                    with open(self.archivo_respaldo, "w", encoding="utf-8") as respaldo:
-                        respaldo.write(contenido_anterior)
+                with open(self.archivo_respaldo, "w", encoding="utf-8") as respaldo:
+                    respaldo.write(contenido_anterior)
 
-                with open(self.archivo_temporal, "w", encoding="utf-8") as temporal:
-                    json.dump(datos_configuracion, temporal, indent=4, ensure_ascii=False)
+            with open(self.archivo_temporal, "w", encoding="utf-8") as temporal:
+                json.dump(datos_configuracion, temporal, indent=4, ensure_ascii=False)
 
-                os.replace(self.archivo_temporal, self.nombre_archivo)
+            os.replace(self.archivo_temporal, self.nombre_archivo)
 
-                self.configuracion_actual = datos_configuracion.copy()
-                return True
+            self.configuracion_actual = datos_configuracion.copy()
+            return True
 
-            except Exception as e:
-                # Imprime el error para que la variable 'e' sea utilizada y no marque advertencia
-                print(f"Fallo crítico al guardar (capturado por seguridad): {e}")
-                if os.path.exists(self.archivo_temporal):
-                    os.remove(self.archivo_temporal)
-                return False
+        except Exception as e:
+            # Imprime el error para que la variable 'e' sea utilizada y no marque advertencia
+            print(f"Fallo crítico al guardar (capturado por seguridad): {e}")
+            if os.path.exists(self.archivo_temporal):
+                os.remove(self.archivo_temporal)
+            return False
